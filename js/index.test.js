@@ -80,6 +80,7 @@ $q().ready(() => {
             description: "Behavioral tests",
             collection: [
                 {
+                    condition: () => !!"true",
                     description: "Click disabled test button",
                     action: () => testButton.click(),
                     waitSec: 1,
@@ -91,6 +92,7 @@ $q().ready(() => {
                     message: "Test div is not displayed",
                 },
                 {
+                    condition: () => testInputs.length > 0,
                     description: "Add value to each test input (!empty)",
                     action: () => testInputs.forEach((i) => { i.val("test").change() }),
                     waitSec: 1,
