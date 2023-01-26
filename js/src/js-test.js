@@ -1,11 +1,13 @@
 export const JSTest = {
     testDebug: false,
-    logColors: {
+    logColor: {
         passed: "background: black; color: #00db3a;",
         failed: "background: black; color: #ff0a0a;",
         info: "background: black; color: #fff;",
-        separatorBegin: "\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc",
-        separatorEnd: "\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2",
+    },
+    logSeparator: {
+        begin: "\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc",
+        end: "\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2",
     },
 
     suiteTest: async (suite) => {
@@ -17,7 +19,7 @@ export const JSTest = {
             let passed = 0;
             let skipped = 0;
 
-            JSTest.infoLog(`${SeparatorBegin} Start test batch "${description}"`);
+            JSTest.infoLog(`${logSeparator.begin} Start test batch "${description}"`);
 
             await collection.reduce(async (promise, test) => {
                 await promise;
@@ -43,7 +45,7 @@ export const JSTest = {
             }, Promise.resolve());
 
             let failed = count - (passed + skipped);
-            console.log(`%c ${SeparatorEnd} End test batch "${description}" -- ${count} Tests | ${skipped > 0 ? skipped + " Skipped; " : ""}%c${passed > 0 ? passed + " Passed; " : ""} %c${failed > 0 ? failed + " Failed" : ""} `, JSTest.logColors.info, JSTest.logColors.passed, JSTest.logColors.failed);
+            console.log(`%c ${logSeparator.end} End test batch "${description}" -- ${count} Tests | ${skipped > 0 ? skipped + " Skipped; " : ""}%c${passed > 0 ? passed + " Passed; " : ""} %c${failed > 0 ? failed + " Failed" : ""} `, JSTest.logColor.info, JSTest.logColor.passed, JSTest.logColor.failed);
         }
     },
 
@@ -62,7 +64,7 @@ export const JSTest = {
 
         }, Promise.resolve());
 
-        console.log(`%c End test batch "${description}" | %cPassed ${passed} of ${count} `, JSTest.logColors.info, passed === count ? JSTest.logColors.passed : JSTest.logColors.failed);
+        console.log(`%c End test batch "${description}" | %cPassed ${passed} of ${count} `, JSTest.logColor.info, passed === count ? JSTest.logColor.passed : JSTest.logColor.failed);
     },
 
     test: async (description, testIt, message="") => {
@@ -74,9 +76,9 @@ export const JSTest = {
     run: async (description, testIt, message="", count=0) => {
         return await testIt.then((result) => {
             if(result.passed) {
-                console.log(`%c ${count > 0 ? count + ")" : ""} PASSED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColors.passed, JSTest.testDebug ? result : "");
+                console.log(`%c ${count > 0 ? count + ")" : ""} PASSED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColor.passed, JSTest.testDebug ? result : "");
             } else {
-                console.log(`%c ${count > 0 ? count + ")" : ""} FAILED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColors.failed, JSTest.testDebug ? result : "");
+                console.log(`%c ${count > 0 ? count + ")" : ""} FAILED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColor.failed, JSTest.testDebug ? result : "");
             }
     
             return result.passed;
@@ -111,11 +113,11 @@ export const JSTest = {
         });
     },
 
-    infoLog: (info) => console.log(`%c ${info} `, JSTest.logColors.info),
-    passLog: () => console.log(`%c PASSED `, JSTest.logColors.passed),
-    failLog: () => console.log(`%c FAILED `, JSTest.logColors.failed),
+    infoLog: (info) => console.log(`%c ${info} `, JSTest.logColor.info),
+    passLog: () => console.log(`%c PASSED `, JSTest.logColor.passed),
+    failLog: () => console.log(`%c FAILED `, JSTest.logColor.failed),
 
     wait: async (secs = 0) => await new Promise((resolve) => setTimeout(resolve, secs * 1000)),
 };
 
-// const {testDebug, logColors, suite, batch, test, shouldBe, infoLog, passLog, failLog, wait} = JSTest;
+// const {testDebug, logColor, logSeparator, suite, batch, test, shouldBe, infoLog, passLog, failLog, wait} = JSTest;
