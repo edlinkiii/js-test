@@ -53,10 +53,10 @@ export const JSTest = {
 
         JSTest.infoLog(`Start test batch "${description}"`);
 
-        await testArray.reduce(async (a, t) => {
-            await a;
+        await testArray.reduce(async (promise, test) => {
+            await promise;
 
-            const result = await JSTest.run(t.description, t.testIt, t.message);
+            const result = await JSTest.run(test.description, test.testIt, test.message);
 
             result && passed++;
 
