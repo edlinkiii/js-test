@@ -4,54 +4,59 @@ export const JSTest = {
         passed: "background: black; color: #00db3a;",
         failed: "background: black; color: #ff0a0a;",
         info: "background: black; color: #fff;",
+        separatorBegin: "\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc\u25bc",
+        separatorEnd: "\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2\u25b2",
     },
 
     suiteTest: async (suite) => {
-        const {description, collection} = suite;
+        const { description, collection, condition } = suite;
 
-        let count = 0;
-        let passed = 0;
-        let skipped = 0;
+        if (!condition || condition()) {
 
-        JSTest.infoLog(`Start test batch "${description}"`)
+            let count = 0;
+            let passed = 0;
+            let skipped = 0;
 
-        await collection.reduce(async (a, t) => {
-            await a;
+            JSTest.infoLog(`${SeparatorBegin} Start test batch "${description}"`);
 
-            count++;
+            await collection.reduce(async (promise, test) => {
+                await promise;
 
-            if((t.condition && t.condition()) || !t.condition) {
-                const {execute, expected, exactEqual} = t.shallBe;
+                count++;
 
-                const action = await t.action && t.action();
+                if ((test.condition && test.condition()) || !test.condition) {
+                    const { execute, expected, exactEqual } = test.shallBe;
+
+                    const action = (await test.action) && test.action();
+
+                    const wait = await JSTest.wait(parseFloat(test.waitSec || 0) || 0);
+
+                    const result = await JSTest.run(test.description, JSTest.shouldBe(execute(), expected, exactEqual), test.message, count);
     
-                const wait = await JSTest.wait(parseFloat(t.waitSec || 0) || 0)
-    
-                const result = await JSTest.run(t.description, JSTest.shouldBe(execute(), expected, exactEqual), t.message, count)
-    
-                result && passed++;
-            } else {
-                skipped++;
+                    result && passed++;
+                } else {
+                    skipped++;
 
-                JSTest.infoLog(`${count}) SKIPPED: ${t.description} -- Condition not met`)
-            }
+                        JSTest.infoLog(`${count}) SKIPPED: ${test.description} -- Condition not met`);
+                }
 
-        }, Promise.resolve());
+            }, Promise.resolve());
 
-        let failed = (count - (passed + skipped));
-        console.log(`%c End test batch "${description}" -- ${count} Tests | ${skipped > 0 ? skipped+" Skipped; " : ""}%c${passed > 0 ? passed+" Passed; " : ""} %c${failed > 0 ? failed+" Failed" : ""} `, JSTest.logColors.info, JSTest.logColors.passed, JSTest.logColors.failed);
+            let failed = count - (passed + skipped);
+            console.log(`%c ${SeparatorEnd} End test batch "${description}" -- ${count} Tests | ${skipped > 0 ? skipped + " Skipped; " : ""}%c${passed > 0 ? passed + " Passed; " : ""} %c${failed > 0 ? failed + " Failed" : ""} `, JSTest.logColors.info, JSTest.logColors.passed, JSTest.logColors.failed);
+        }
     },
 
     batch: async (description, testArray) => {
         const count = testArray.length;
         let passed = 0;
 
-        JSTest.infoLog(`Start test batch "${description}"`)
+        JSTest.infoLog(`Start test batch "${description}"`);
 
         await testArray.reduce(async (a, t) => {
             await a;
 
-            const result = await JSTest.run(t.description, t.testIt, t.message)
+            const result = await JSTest.run(t.description, t.testIt, t.message);
 
             result && passed++;
 
@@ -61,7 +66,7 @@ export const JSTest = {
     },
 
     test: async (description, testIt, message="") => {
-        const result = await JSTest.run(description, testIt, message)
+        const result = await JSTest.run(description, testIt, message);
 
         return result;
     },
@@ -69,9 +74,9 @@ export const JSTest = {
     run: async (description, testIt, message="", count=0) => {
         return await testIt.then((result) => {
             if(result.passed) {
-                console.log(`%c ${count > 0 ? count+")" : ""} PASSED: ${description}${(message.length > 0) ? " | " + message : "" } `, JSTest.logColors.passed, JSTest.testDebug ? result : "");
+                console.log(`%c ${count > 0 ? count + ")" : ""} PASSED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColors.passed, JSTest.testDebug ? result : "");
             } else {
-                console.log(`%c ${count > 0 ? count+")" : ""} FAILED: ${description}${(message.length > 0) ? " | " + message : "" } `, JSTest.logColors.failed, JSTest.testDebug ? result : "");
+                console.log(`%c ${count > 0 ? count + ")" : ""} FAILED: ${description}${message.length > 0 ? " | " + message : ""} `, JSTest.logColors.failed, JSTest.testDebug ? result : "");
             }
     
             return result.passed;
@@ -93,14 +98,14 @@ export const JSTest = {
                 value2 = expected;
             }
     
-            passed = (strict) ? value1 === value2 : value1 == value2;
+            passed = strict ? value1 === value2 : value1 == value2;
 
             const ret = {
                 actual,
                 expected,
                 strict,
-                passed
-            }
+                passed,
+            };
     
             res(ret);
         });
@@ -110,7 +115,7 @@ export const JSTest = {
     passLog: () => console.log(`%c PASSED `, JSTest.logColors.passed),
     failLog: () => console.log(`%c FAILED `, JSTest.logColors.failed),
 
-    wait: async (secs=0) => await new Promise(resolve => setTimeout(resolve, (secs * 1000))),
+    wait: async (secs = 0) => await new Promise((resolve) => setTimeout(resolve, secs * 1000)),
 };
 
 // const {testDebug, logColors, suite, batch, test, shouldBe, infoLog, passLog, failLog, wait} = JSTest;
